@@ -29,25 +29,30 @@ npm install -g  json-server@0.17.1
 Ejecutar Json-server
 
 ```
-json-server --watch src/db/db.json --port 4000
+json-server --watch db/db.json --port 4000
 ```
 
 Resources
   http://localhost:4000/pacientes
   http://localhost:4000/citas
+  http://localhost:4000/doctores
 
   Home
   http://localhost:4000
 
   ```json
-  {
+{
   "pacientes": [
     { "id": 1, "nombre": "Juan Pérez", "edad": 35, "telefono": "555-1234" },
     { "id": 2, "nombre": "María López", "edad": 28, "telefono": "555-5678" }
   ],
   "citas": [
-    { "id": 1, "fecha": "2024-12-30", "hora": "10:00", "pacienteId": 1, "descripcion": "Consulta general" },
-    { "id": 2, "fecha": "2024-12-31", "hora": "11:00", "pacienteId": 2, "descripcion": "Chequeo anual" }
+    { "id": 1, "fecha": "2024-12-30", "hora": "10:00", "pacienteId": 1, "doctorId": 1, "descripcion": "Consulta general" },
+    { "id": 2, "fecha": "2024-12-31", "hora": "11:00", "pacienteId": 2, "doctorId": 2, "descripcion": "Chequeo anual" }
+  ],
+  "doctores": [
+    { "id": 1, "nombre": "Dr. Roberto Gómez", "especialidad": "Medicina General", "telefono": "555-9876" },
+    { "id": 2, "nombre": "Dra. Ana María Torres", "especialidad": "Pediatría", "telefono": "555-4321" }
   ]
 }
 ```
@@ -84,5 +89,5 @@ Asegúrate de tener instalados los siguientes programas:
 ### 1. Clona el repositorio
 
 ```bash
-git clone https://github.com/tuusuario/citas-medicas.git
-cd citas-medicas
+git clone https://github.com/hacarapi/Diplomado_Modulo_6_Practica_2.git
+```
