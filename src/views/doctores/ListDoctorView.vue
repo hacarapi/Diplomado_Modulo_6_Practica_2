@@ -1,13 +1,16 @@
 <template>
-    <div>
+    <div class="container">
         <Modal v-model:modelValue="showModalNuevo">
             <NewDoctor @on-register="onRegister($event)"/>
         </Modal>
         <Modal v-model:modelValue="showModalEdit">
             <EditDoctor @on-update="onUpdate($event)" :item="itemToEdit"/>
         </Modal>
-        <h1>Lista de Mascotas</h1>
-        <button @click="showModalNuevo = true" class="btn btn-primary">Nuevo</button>
+        <h3>Lista de Doctores</h3>
+        <button @click="showModalNuevo = true" class="btn btn-primary">
+            <i class="fa fa-fw fa-plus-circle"></i>
+            Agregar Nuevo Doctor
+        </button>
         <button @click="buscar()" class="btn btn-lith" style="float:right">Buscar</button>
         <input type="search" style="float:right" v-model="textToSearch" @search="buscar()" placeholder="Buscar por nombre">
         <table>
@@ -15,10 +18,8 @@
                 <tr>
                     <th>No.</th>
                     <th>Nombre</th>
-                    <th>Especie</th>
-                    <th>Raza</th>
-                    <th>Edad</th>
-                    <th>Dueno</th>
+                    <th>Especialidad</th>
+                    <th>Teléfono</th>
                     <th></th>
                 </tr>
             </thead>
@@ -26,10 +27,8 @@
                 <tr v-for="(item, index) in itemList" :key="index">
                     <td>{{ 1 + index }}</td>
                     <td>{{ item.nombre }}</td>
-                    <td>{{ item.especie }}</td>
-                    <td>{{ item.raza }}</td>
-                    <td>{{ item.edad }}</td>
-                    <td>{{ item.cliente.nombre }}</td>
+                    <td>{{ item.especialidad }}</td>
+                    <td>{{ item.telefono }}</td>
                     <td>
                         <button @click="edit(item)" class="btn btn-dark" style="margin-right: 15px;">Editar</button>
                         <button @click="Eliminar(item.id)" class="btn btn-danger">Eliminar</button>
@@ -48,7 +47,7 @@ import EditDoctor from './EditDoctorView.vue'
 
 
 export default {
-    name: 'Mascota',
+    name: 'Doctor',
     data() {
         return {
             currentPage: 1,
@@ -71,7 +70,7 @@ export default {
         ...mapActions(['increment']),
         getList() {
             const vm = this;
-            this.axios.get(this.baseUrl + "/mascotas?_expand=cliente&q=" + this.textToSearch)
+            this.axios.get(this.baseUrl + "/doctores?_expand=nombre&q=" + this.textToSearch)
                 .then(function (response) {
                     vm.itemList = response.data;
                 })
@@ -86,7 +85,7 @@ export default {
         Eliminar(id) {
             if (confirm("¿Esta Seguro de eliminar el registro?")) {
                 const vm = this;
-                this.axios.delete(this.baseUrl + "/mascotas/" + id)
+                this.axios.delete(this.baseUrl + "/doctores/" + id)
                     .then(function (response) {
                         vm.getList();
                         vm.$toast.show("Registro eliminado.", "danger");

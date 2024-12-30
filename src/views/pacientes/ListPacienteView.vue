@@ -6,7 +6,7 @@
         <Modal v-model:modelValue="showModalEdit">
             <EditPacienteView @on-update="onUpdate($event)" :item="itemToEdit" />
         </Modal>
-        <h1>Lista de Pacientes</h1>
+        <h3>Lista de Pacientes</h3>
         <button @click="showModalNuevo = true" class="btn btn-primary">
             <i class="fa fa-fw fa-plus-circle"></i>
             Agregar Nuevo Paciente

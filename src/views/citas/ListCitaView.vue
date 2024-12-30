@@ -1,30 +1,27 @@
 <template>
-    <div>
+    <div class="container">
         <Modal v-model:modelValue="showModalNuevo">
             <NewCitaView @on-register="onRegister()" />
         </Modal>
         <Modal v-model:modelValue="showModalEdit">
             <EditCitaView @on-update="onUpdate()" :item="itemToEdit" />
         </Modal>
-        <h1>Lista de Citas</h1>
-        <p>{{path}}</p>
-        <button @click="showModalNuevo = true" class="btn btn-primary">Nuevo</button>
-        <button @click="buscar()" class="btn btn-lith" style="float:right">Buscar</button>
-        <input type="search" style="float:right" v-model="textToSearch" @search="buscar()" placeholder="Buscar por motivo">
+        <h1>Lista de Citas Médicas</h1>
+        <button @click="showModalNuevo = true" class="btn btn-primary">Nueva Cita</button>
         <div style="margin: 20px 0;">
             <h3>Filtros:</h3>
             <form @submit.prevent="filtrar()">
-
-                <label for="fecha"> Fecha: </label>
+                <label for="fecha">Fecha:</label>
                 <input type="date" id="fecha" v-model="filter.fecha" placeholder="Ingrese la fecha" />
 
-                <label for="veterinario"> Veterinario: </label>
-                <select id="veterinario" v-model="filter.veterinarioId">
+                <label for="doctor">Doctor:</label>
+                <select id="doctor" v-model="filter.doctorId">
                     <option value="">Todos</option>
-                    <option :value="veterinario.id" v-for="(veterinario, index) in veterinarioList" :key="`veterinario-${index}`">{{ veterinario.nombre }}
+                    <option :value="doctor.id" v-for="(doctor, index) in doctorList" :key="`doctor-${index}`">
+                        {{ doctor.nombre }}
                     </option>
                 </select>
-                <button type="submit" class="btn btn-lith">Fitrar</button>
+                <button type="submit" class="btn btn-secondary">Filtrar</button>
             </form>
         </div>
         <table>
@@ -33,24 +30,22 @@
                     <th>No.</th>
                     <th>Fecha</th>
                     <th>Hora</th>
-                    <th>Veterinario</th>
-                    <th>Cliente</th>
-                    <th>Mascota</th>
-                    <th>Motivo</th>
-                    <th></th>
+                    <th>Paciente</th>
+                    <th>Doctor</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(item, index) in itemList" :key="index">
-                    <td>{{ 1 + index }}</td>
+                <tr v-for="(item, index) in itemList" :key="item.id">
+                    <td>{{ index + 1 }}</td>
                     <td>{{ item.fecha }}</td>
                     <td>{{ item.hora }}</td>
-                    <td>{{ item.veterinario.nombre }}</td>
-                    <td>{{ item.cliente.nombre }}</td>
-                    <td>{{ item.mascota.nombre }}</td>
-                    <td>{{ item.motivo }}</td>
+                    <td>{{ item.paciente.nombre }}</td>
+                    <td>{{ item.doctor?.nombre || "Sin asignar" }}</td>
+                    <td>{{ item.descripcion }}</td>
                     <td>
-                        <button @click="edit(item)" class="btn btn-dark" style="margin-right: 15px;">Editar</button>
+                        <button @click="edit(item)" class="btn btn-dark" style="margin-right: 10px;">Editar</button>
                         <button @click="Eliminar(item.id)" class="btn btn-danger">Eliminar</button>
                     </td>
                 </tr>
@@ -60,126 +55,133 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from 'vuex'
-import Modal from '../../components/Modal.vue'
-import NewCitaView from './NewCitaView.vue'
-import EditCitaView from './EditCitaView.vue'
-
+import { mapGetters } from "vuex";
+import Modal from "../../components/Modal.vue";
+import NewCitaView from "./NewCitaView.vue";
+import EditCitaView from "./EditCitaView.vue";
 
 export default {
-    name: 'Cita',
+    name: "Cita",
     data() {
         return {
-            currentPage: 1,
-            totalPages: 100, // Este valor debe ser calculado según tus datos
             showModalNuevo: false,
             showModalEdit: false,
             itemToEdit: null,
-            textToSearch: '',
-            textToFilter: '',
             itemList: [],
-            veterinarioList: [],
-            path: '',
+            doctorList: [],
             filter: {
-                fecha: null,
-                veterinarioId:''
-            }
-        }
+                fecha: "",
+                doctorId: "",
+            },
+        };
     },
     components: {
-        // Registro de componentes que se utilizaran.
         Modal,
         NewCitaView,
-        EditCitaView
+        EditCitaView,
     },
     methods: {
-        // métodos que se pueden llamar desde la plantilla o desde otras partes del componente.
-        ...mapActions(['increment']),
-        getList() {
-            const vm = this;
-            this.path = this.baseUrl + "/citas?_sort=fecha,hora&_order=desc,asc&_expand=cliente&_expand=mascota&_expand=veterinario" + this.textToFilter + "&q=" + this.textToSearch;
-            this.axios.get(this.baseUrl + "/citas?_sort=fecha,hora&_order=desc,asc&_expand=cliente&_expand=mascota&_expand=veterinario" + this.textToFilter + "&q=" + this.textToSearch)
-                .then(function (response) {
-                    vm.itemList = response.data;
+        getCitas(filtros = {}) {
+            const queryParams = [];
+
+            if (filtros.fecha) {
+                queryParams.push(`fecha=${filtros.fecha}`);
+            }
+            if (filtros.doctorId) {
+                queryParams.push(`doctorId=${filtros.doctorId}`);
+            }
+
+            const queryString = queryParams.length ? `&${queryParams.join("&")}` : "";
+
+            this.axios.get(`${this.baseUrl}/citas?_expand=paciente${queryString}`)
+                .then((response) => {
+                    const citas = response.data;
+                    this.axios.get(`${this.baseUrl}/doctores`)
+                        .then((doctorResponse) => {
+                            const doctores = doctorResponse.data;
+                            this.itemList = citas.map((cita) => ({
+                                ...cita,
+                                doctor: doctores.find((doctor) => doctor.id === cita.doctorId) || { nombre: "Sin asignar" },
+                            }));
+                        });
                 })
-                .catch(function (error) {
+                .catch((error) => {
+                    console.error("Error al obtener citas:", error);
+                });
+        },
+        getDoctores() {
+            this.axios
+                .get(`${this.baseUrl}/doctores`)
+                .then((response) => {
+                    this.doctorList = response.data;
+                })
+                .catch((error) => {
                     console.error(error);
                 });
         },
-        getVeterinarioList() {
-            const vm = this;
-            this.axios.get(this.baseUrl + "/veterinarios")
-                .then(function (response) {
-                    vm.veterinarioList = response.data;
-                })
-                .catch(function (error) {
-                    console.error(error);
-                });
+        filtrar() {
+            this.getCitas({
+                fecha: this.filter.fecha,
+                doctorId: this.filter.doctorId,
+            });
         },
         edit(item) {
-            this.itemToEdit = Object.assign({}, item);
+            this.itemToEdit = { ...item };
             this.showModalEdit = true;
         },
         Eliminar(id) {
-            if (confirm("¿Esta Seguro de eliminar el registro?")) {
-                const vm = this;
-                this.axios.delete(this.baseUrl + "/citas/" + id)
-                    .then(function (response) {
-                        vm.getList();
-                        vm.$toast.show("Registro eliminado.", "danger");
+            if (confirm("¿Está seguro de eliminar esta cita?")) {
+                this.axios
+                    .delete(`${this.baseUrl}/citas/${id}`)
+                    .then(() => {
+                        this.getCitas();
                     })
-                    .catch(function (error) {
+                    .catch((error) => {
                         console.error(error);
                     });
             }
-
         },
-        buscar(value) {
-            this.getList();
-        },
-        filtrar() {
-            this.textToFilter = '';
-            if (this.filter.fecha != null && this.filter.fecha != '') {
-                this.textToFilter += "&fecha=" + this.filter.fecha;
-            }
-            if (this.filter.veterinarioId != null && this.filter.veterinarioId != '') {
-                this.textToFilter += "&veterinarioId=" + this.filter.veterinarioId;
-            }
-            this.getList();
-        },
-        onRegister(event) {
-            this.getList();
+        onRegister() {
+            this.getCitas();
             this.showModalNuevo = false;
-            this.$toast.show('Registro exitoso', 'success');
         },
-        onUpdate(event) {
-            this.getList();
+        onUpdate() {
+            this.getCitas();
             this.showModalEdit = false;
             this.itemToEdit = null;
-            this.$toast.show('Edicion exitosa', 'info');
         },
-        showToast(message, type) {
-            this.$toast.show(message, type);
-        }
     },
     computed: {
-        // propiedades computadas que dependen de otras propiedades reactivas
-        ...mapState(['count']),
-        ...mapGetters(['doubleCount', 'getBaseUrl']),
+        ...mapGetters(["getBaseUrl"]),
         baseUrl() {
-            return this.getBaseUrl
-        }
-    },
-    props: {
-        // propiedades que el componente puede recibir.
+            return this.getBaseUrl;
+        },
     },
     mounted() {
-        this.getList();
-        this.getVeterinarioList();
+        this.getCitas();
+        this.getDoctores();
     },
-    emits: [] // los eventos personalizados que el componente puede emitir.
-}
+};
 </script>
 
-<style>
+<style scoped>
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background-color: #f4f4f4;
+}
+
+th,
+td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    text-align: center;
+}
 </style>

@@ -1,12 +1,19 @@
 <template>
   <div>
-    <h1>Editar Cliente</h1>
+    <h1>Editar Paciente</h1>
     <form @submit.prevent="submitForm">
       <div class="form-group">
         <label for="name">Nombre:</label>
         <input type="text" id="name" v-model="form.nombre" :class="{ 'is-invalid': errors.nombre }"
           placeholder="Ingrese el nombre" />
         <div v-if="errors.nombre" class="invalid-feedback">{{ errors.nombre }}</div>
+      </div>
+
+      <div class="form-group">
+        <label for="edad">Edad:</label>
+        <input type="number" id="edad" v-model="form.edad" :class="{ 'is-invalid': errors.edad }"
+          placeholder="Ingrese la edad" />
+        <div v-if="errors.edad" class="invalid-feedback">{{ errors.edad }}</div>
       </div>
 
       <div class="form-group">
@@ -27,14 +34,13 @@
     </form>
   </div>
 </template>
-  
+
 <script>
-import { mapState, mapGetters, mapActions } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex';
 export default {
   name: 'EditClient',
   data() {
     return {
-
       errors: {}
     };
   },
@@ -48,9 +54,17 @@ export default {
         this.errors.nombre = 'El nombre es obligatorio.';
       }
 
+      if (!this.item.edad) {
+        this.errors.edad = 'La edad es obligatoria.';
+      } else if (!/^\d+$/.test(this.item.edad) || this.item.edad <= 0) {
+        this.errors.edad = 'La edad debe ser un número positivo.';
+      }
+
       if (!this.item.telefono) {
         this.errors.telefono = 'El teléfono es obligatorio.';
-      } else if (!/^(\+?\d{1,4}[-.\s]?)?(\(?\d{1,4}\)?[-.\s]?)?\d{1,4}([-.\s]?\d{1,9})+$/.test(this.item.telefono)) {
+      } else if (
+        !/^(\+?\d{1,4}[-.\s]?)?(\(?\d{1,4}\)?[-.\s]?)?\d{1,4}([-.\s]?\d{1,9})+$/.test(this.item.telefono)
+      ) {
         this.errors.telefono = 'El teléfono no es válido.';
       }
 
@@ -70,12 +84,13 @@ export default {
     },
     save() {
       const vm = this;
-      this.axios.patch(this.baseUrl + "/clientes/" + this.item.id, this.form)
+      this.axios
+        .patch(this.baseUrl + '/pacientes/' + this.item.id, this.form)
         .then(function (response) {
           if (response.status == '200') {
             vm.$emit('on-update', response.data);
           }
-          console.log(response); 
+          console.log(response);
         })
         .catch(function (error) {
           console.error(error);
@@ -83,18 +98,16 @@ export default {
     }
   },
   computed: {
-    // propiedades computadas que dependen de otras propiedades reactivas
     ...mapState(['count']),
     ...mapGetters(['doubleCount', 'getBaseUrl']),
     baseUrl() {
-      return this.getBaseUrl
+      return this.getBaseUrl;
     },
     form() {
       return Object.assign({}, this.item);
     }
-  },
-}
+  }
+};
 </script>
-  
+
 <style scoped></style>
-  

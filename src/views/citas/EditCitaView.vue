@@ -4,38 +4,29 @@
     <form @submit.prevent="submitForm" v-if="form">
 
       <div class="form-group">
-        <label for="veterinario">Veterinario:</label>
-        <select id="veterinario" v-model="form.veterinarioId" :class="{ 'is-invalid': errors.veterinarioId }">
-          <option :value="veterinario.id" v-for="(veterinario, index) in veterinarioList" :key="`veterinario-${index}`">{{ veterinario.nombre }}
+        <label for="paciente">Paciente:</label>
+        <select id="paciente" v-model="form.pacienteId" :class="{ 'is-invalid': errors.pacienteId }" @change="setDoctors()">
+          <option :value="paciente.id" v-for="(paciente, index) in pacienteList" :key="`paciente-${index}`">{{ paciente.nombre }}
           </option>
         </select>
-        <div v-if="errors.veterinarioId" class="invalid-feedback">{{ errors.veterinarioId }}</div>
+        <div v-if="errors.pacienteId" class="invalid-feedback">{{ errors.pacienteId }}</div>
       </div>
 
       <div class="form-group">
-        <label for="cliente">Cliente:</label>
-        <select id="cliente" v-model="form.clienteId" :class="{ 'is-invalid': errors.clienteId }" @change="setMascotas()">
-          <option :value="cliente.id" v-for="(cliente, index) in clienteList" :key="`cliente-${index}`">{{ cliente.nombre }}
+        <label for="doctor">Doctor:</label>
+        <select id="doctor" v-model="form.doctorId" :class="{ 'is-invalid': errors.doctorId }">
+          <option :value="doctor.id" v-for="(doctor, index) in doctorList" :key="`paciente-${index}`">{{ doctor.nombre }}
           </option>
         </select>
-        <div v-if="errors.clienteId" class="invalid-feedback">{{ errors.clienteId }}</div>
+        <div v-if="errors.doctorId" class="invalid-feedback">{{ errors.doctorId }}</div>
       </div>
 
       <div class="form-group">
-        <label for="mascota">Mascota:</label>
-        <select id="mascota" v-model="form.mascotaId" :class="{ 'is-invalid': errors.mascotaId }">
-          <option :value="mascota.id" v-for="(mascota, index) in mascotaList" :key="`cliente-${index}`">{{ mascota.nombre }}
-          </option>
+        <label for="descripcion">Descripción:</label>
+        <select id="descripcion" v-model="form.descripcion" :class="{ 'is-invalid': errors.descripcion }">
+          <option :value="descripcion" v-for="(descripcion, index) in descripcionList" :key="`descripcion-${index}`">{{ descripcion }}</option>
         </select>
-        <div v-if="errors.mascotaId" class="invalid-feedback">{{ errors.mascotaId }}</div>
-      </div>
-
-      <div class="form-group">
-        <label for="motivo">Motivo:</label>
-        <select id="motivo" v-model="form.motivo" :class="{ 'is-invalid': errors.motivo }">
-          <option :value="motivo" v-for="(motivo, index) in motivoList" :key="`motivo-${index}`">{{ motivo }}</option>
-        </select>
-        <div v-if="errors.motivo" class="invalid-feedback">{{ errors.motivo }}</div>
+        <div v-if="errors.descripcion" class="invalid-feedback">{{ errors.descripcion }}</div>
       </div>
 
       <div class="form-group">
@@ -63,13 +54,13 @@ export default {
   name: 'CitaEdit',
   data() {
     return {
-      veterinarioList: [],
-      clienteList: [],
-      mascotaList: [],
-      motivoList: [
+      pacienteList: [],
+      doctorList: [],
+      descripcionList: [
         "Vacunación",
         "Revisión cardiológica",
-        "Chequeo general",
+        "Consulta general",
+        "Chequeo anual",
         "Chequeo dermatológico"
       ],
       errors: {}
@@ -81,20 +72,16 @@ export default {
     validateForm() {
       this.errors = {};
 
-      if (!this.form.veterinarioId) {
-        this.errors.veterinarioId = 'El Veterinario es obligatorio.';
-      }
-
-      if (!this.form.clienteId) {
-        this.errors.clienteId = 'El Cliente es obligatoria.';
+      if (!this.form.pacienteId) {
+        this.errors.pacienteId = 'El Paciente es obligatorio.';
       }
       
-      if (!this.form.mascotaId) {
-        this.errors.mascotaId = 'La mascota es obligatorio.';
+      if (!this.form.doctorId) {
+        this.errors.doctorId = 'El Doctor es obligatorio.';
       }
 
-      if (!this.form.motivo) {
-        this.errors.motivo = 'El motivo es obligatorio.';
+      if (!this.form.descripcion) {
+        this.errors.descripcion = 'La Descripción es obligatoria.';
       }
 
       if (!this.form.fecha) {
@@ -105,7 +92,6 @@ export default {
         this.errors.hora = 'La hora es obligatorio.';
       }
 
-
       return Object.keys(this.errors).length === 0;
     },
 
@@ -115,7 +101,7 @@ export default {
         this.save();
         // Reiniciar el formulario
         this.form = {
-          clienteId: null
+          pacienteId: null
         };
       }
     },
@@ -132,31 +118,31 @@ export default {
           console.error(error);
         });
     },
-    getVeterinarioList() {
+    getPacienteList() {
       const vm = this;
-      this.axios.get(this.baseUrl + "/veterinarios")
+      this.axios.get(this.baseUrl + "/pacientes")
         .then(function (response) {
-          vm.veterinarioList = response.data;
+          vm.pacienteList = response.data;
         })
         .catch(function (error) {
           console.error(error);
         });
     },
-    getClienteList() {
+    getDoctorList() {
       const vm = this;
-      this.axios.get(this.baseUrl + "/clientes")
+      this.axios.get(this.baseUrl + "/doctores")
         .then(function (response) {
-          vm.clienteList = response.data;
+          vm.doctorList = response.data;
         })
         .catch(function (error) {
           console.error(error);
         });
     },
-    setMascotas(){
+    setDoctores(){
       const vm = this;
-            this.axios.get(this.baseUrl + "/mascotas?clienteId=" + this.form.clienteId)
+            this.axios.get(this.baseUrl + "/doctores?pacienteId=" + this.form.pacienteId)
                 .then(function (response) {
-                    vm.mascotaList = response.data;
+                    vm.doctorList = response.data;
                 })
                 .catch(function (error) {
                     console.error(error);
@@ -175,8 +161,8 @@ export default {
     }
   },
   mounted() {
-    this.getClienteList();
-    this.getVeterinarioList();
+    this.getPacienteList();
+    this.getDoctorList();
   },
 }
 </script>
